@@ -53,7 +53,11 @@ begin
       loop:=true
     end;
   until ((input='0') or (not loop));
-
+  
+  repeate
+    write('0 ');
+  until keypressed;
+  
 end;
 
 { MAIN }
