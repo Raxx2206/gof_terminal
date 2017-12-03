@@ -42,8 +42,8 @@ procedure setField;
 var
   tfIN:textFile;
   cIN:char;
-  i:integer = 0;
-  j:integer = 0;
+  i_col:integer = 0;
+  j_row:integer = 0;
 begin
   assign(tfIN, ('templates/'+selectedTemplate));
 //  try
@@ -57,9 +57,11 @@ begin
       if(cIN=#10) then  // #10 == new line | for windows #13#10
       begin
         if DEBUG then writeln('   char is new line'); {debug}
-        if(i<>COL-1) then break;  // if size of the field matrix did not match the max row and col break, because there must be a error
-        Inc(j);
-        i:=0;
+        if DEBUG then writeln('i_col: ', i_col);  {debug}
+        if(i_col<>COL) then break;  // if size of the field matrix did not match the max row and col break, because there must be a error
+        Inc(j_row);
+        i_col:=0;
+        continue;
       end;
 
       if((cIN<>#48) and (cIN<>#49) and (cIN<>#10)) then
@@ -68,14 +70,16 @@ begin
         break;  // if the the char is not a zero or one break and print error code
       end;
 
-      if DEBUG then writeln('   set cell', i, ' ', j);  {debug}
-      gameField[i,j]:=cIN;
-      Inc(i); // increment row col counter after every inserted char
+      if DEBUG then writeln('   set cell', i_col, ' ', j_row);  {debug}
+      gameField[j_row,i_col]:=cIN;
+      Inc(i_col); // increment row col counter after every inserted char
+
+//      if DEBUG then readkey;  {debug}
     end;
 //    writeln(length(gameField));
 //    writeln(length(gameField[0]));
 
-    if DEBUG then writeln('   i: ', i, 'j: ', j);  {debug}
+    if DEBUG then writeln('   i: ', i_col, 'j: ', j_row);  {debug}
 
     printField;
     if(not eof(tfIN)) then
