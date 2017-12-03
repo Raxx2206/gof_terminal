@@ -51,13 +51,13 @@ begin
     while not eof(tfIN) do
     begin
       read(tfIN, cIN);
-      if DEBUG then writeln('   char readed: ', cIN); {debug}
+      if DEBUG=3 then writeln('   char readed: ', cIN); {debug}
 
       // if hit a new line reset row counter and increment col counter by one
       if(cIN=#10) then  // #10 == new line | for windows #13#10
       begin
-        if DEBUG then writeln('   char is new line'); {debug}
-        if DEBUG then writeln('i_col: ', i_col);  {debug}
+        if DEBUG=3 then writeln('   char is new line'); {debug}
+        if DEBUG=3 then writeln('i_col: ', i_col);  {debug}
         if(i_col<>COL) then break;  // if size of the field matrix did not match the max row and col break, because there must be a error
         Inc(j_row);
         i_col:=0;
@@ -66,22 +66,21 @@ begin
 
       if((cIN<>#48) and (cIN<>#49) and (cIN<>#10)) then
       begin
-        if DEBUG then writeln('   is no valid char!'); {debug}
+        if DEBUG=3 then writeln('   is no valid char!'); {debug}
         break;  // if the the char is not a zero or one break and print error code
       end;
 
-      if DEBUG then writeln('   set cell', i_col, ' ', j_row);  {debug}
+      if DEBUG=3 then writeln('   set cell', i_col, ' ', j_row);  {debug}
       gameField[j_row,i_col]:=cIN;
       Inc(i_col); // increment row col counter after every inserted char
 
-//      if DEBUG then readkey;  {debug}
+//      if DEBUG=3 then readkey;  {debug}
     end;
 //    writeln(length(gameField));
 //    writeln(length(gameField[0]));
 
-    if DEBUG then writeln('   i: ', i_col, 'j: ', j_row);  {debug}
+    if DEBUG=3 then writeln('   i: ', i_col, 'j: ', j_row);  {debug}
 
-    printField;
     if(not eof(tfIN)) then
       writeln('Fehler beim einlesen der datei "', selectedTemplate, '" bitte pruefen sie die Datei.');
 

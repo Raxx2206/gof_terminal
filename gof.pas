@@ -19,7 +19,7 @@ var
   selectedTemplate:string = 'default.txt';
   gameField :array[0..ROW-1,0..COL-1] of char;
 
-  DEBUG:boolean = true;
+  DEBUG:byte;
 
 
 {$I proceduren}
@@ -61,6 +61,7 @@ end;
 
 { MAIN }
 begin
+  if(paramcount > 0) then DEBUG:=strtoint(paramstr(1));
   clrscr;
   writeln('=============WELCOME==============');
   repeat
@@ -68,7 +69,7 @@ begin
     writeln('(2) Vorlage laden');
     writeln('(0) Exit');
     write('~~> ');
-    input := readkey;
+    input := readkey; //TODO: change to readln
     writeln(input);
     case input of
       #49 :
