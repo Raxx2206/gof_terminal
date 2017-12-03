@@ -16,7 +16,8 @@ var
   input : char;
   mainLoop : boolean = false;
 
-  selectedTemplate:integer = 0;
+  selectedTemplate:string = 'default.txt';
+  gameField :array[0..ROW-1,0..COL-1] of char;
 
   DEBUG:boolean = true;
 
@@ -54,10 +55,7 @@ begin
     end;
   until ((input='0') or (not loop));
   
-  repeate
-    write('0 ');
-  until keypressed;
-  
+
 end;
 
 { MAIN }
