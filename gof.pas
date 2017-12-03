@@ -16,7 +16,8 @@ var
   input : char;
   mainLoop : boolean = false;
 
-  selectedTemplate:integer = 0;
+  selectedTemplate:string = 'default.txt';
+  gameField :array[0..ROW-1,0..COL-1] of char;
 
   DEBUG:boolean = true;
 
@@ -24,7 +25,7 @@ var
 {$I proceduren}
 
 // list available templates inside the folder templates
-procedure listTemplates;
+procedure selectTemplate;
 var
   templateName:stringArray;
   input:string;
@@ -38,6 +39,7 @@ begin
   writeln;
   templateName := getTemplates(size);
   repeat
+    clrscr;
     writeln('Waehlen sie eine Vorlage');
 
     for i:=1 to size do writeln('(', (i), ')', templateName[i]);
@@ -54,10 +56,7 @@ begin
     end;
   until ((input='0') or (not loop));
   
-  repeate
-    write('0 ');
-  until keypressed;
-  
+
 end;
 
 { MAIN }
@@ -67,6 +66,7 @@ begin
   repeat
     writeln('(1) Spiel Starten');
     writeln('(2) Vorlage laden');
+    writeln('(0) Exit');
     write('~~> ');
     input := readkey;
     writeln(input);
@@ -78,9 +78,9 @@ begin
       end;
       #50 :
       begin
-        mainLoop := true;
-        listTemplates;
+        selectTemplate;
       end;
+      '0' : break;
     else writeln('Geben Sie eine Zahl in den Klammern ein (z.B. 1=Spiel Starten) \n\n');
     end;
   until mainLoop;

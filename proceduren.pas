@@ -25,7 +25,68 @@ begin
   getTemplates:=templateName;
 end;
 
+procedure printField;
+var
+  i:integer = 0;
+  j:integer = 0;
+begin
+  for i:=0 to ROW-1 do begin
+    for j:=0 to COL-1 do begin
+      write(gameField[i,j]);
+    end;
+    writeln();
+  end;
+end;
+
+procedure setField;
+var
+  tfIN:textFile;
+  cIN:char;
+  i:integer = 0;
+  j:integer = 0;
+begin
+  assign(tfIN, ('templates/'+selectedTemplate));
+//  try
+    reset(tfIN);
+    while not eof(tfIN) do
+    begin
+      read(tfIN, cIN);
+      if DEBUG then writeln('   char readed: ', cIN); {debug}
+
+      // if hit a new line reset row counter and increment col counter by one
+      if(cIN=#10) then  // #10 == new line | for windows #13#10
+      begin
+        if DEBUG then writeln('   char is new line'); {debug}
+        if(i<>COL-1) then break;  // if size of the field matrix did not match the max row and col break, because there must be a error
+        Inc(j);
+        i:=0;
+      end;
+
+      if((cIN<>#48) and (cIN<>#49) and (cIN<>#10)) then
+      begin
+        if DEBUG then writeln('   is no valid char!'); {debug}
+        break;  // if the the char is not a zero or one break and print error code
+      end;
+
+      if DEBUG then writeln('   set cell', i, ' ', j);  {debug}
+      gameField[i,j]:=cIN;
+      Inc(i); // increment row col counter after every inserted char
+    end;
+//    writeln(length(gameField));
+//    writeln(length(gameField[0]));
+
+    if DEBUG then writeln('   i: ', i, 'j: ', j);  {debug}
+
+    printField;
+    if(not eof(tfIN)) then
+      writeln('Fehler beim einlesen der datei "', selectedTemplate, '" bitte pruefen sie die Datei.');
+
+    close(tfIN);
+end;
+
 procedure startGame;
 begin
-
+  setField;
 end;
+
+
