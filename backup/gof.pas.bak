@@ -9,12 +9,11 @@ const
   ROW=30;
 
 var
-  input: string;
+  input: char;
   mainLoop: boolean=false;
 
   selectedTemplate: string='default.txt';
   gameField: array[0..ROW-1, 0..COL-1] of char;
-  nextGen: array[0..ROW-1, 0..COL-1] of char;
 
   DEBUG: byte;
 
@@ -75,8 +74,7 @@ begin
       begin
         writeln; writeln('Geben Sie eine Zahl in den Klammern ein (z.B. 1=', templateName[1], ')');
         loop := true
-      end
-    else selectedTemplate:=templateName[choise];
+      end;
   until ((input='0')or(not loop));
 
 
@@ -101,20 +99,16 @@ begin
     begin
       if DEBUG>=4 then readkey; {debug}
 
-      {all cells on the ourside or dead and still be dead regardless of the file}
-      read(tfIN, cIN);
-      if(((cIN<>#48)and(cIN<>#10)) and ((i_col=0)or(i_col=COL-1)or(j_row=0)or(j_row=ROW-1))) then
-        begin
-          if DEBUG>=2 then writeln('  cell is border'); {debug}
-          cIN:=#48;
-        end;
+      {all cells on the oursides or dead and still be dead regardless of the file}
+      if ((i_col=0)or(i_col=COL-1)or(j_row=0)or(j_row=ROW-1)) then cIN := #48
+      else read(tfIN, cIN);
 
       if DEBUG=3 then writeln('   char readed: ', cIN); {debug}
       {if hit a new line reset row counter and increment col counter by one}
       if(cIN=#10) then  {#10 == new line | for windows #13#10}
         begin
-          if DEBUG>=2 then writeln('   char is new line'); {debug}
-          if DEBUG>=2 then writeln('      -i_col: ', i_col); {debug}
+          if DEBUG=3 then writeln('   char is new line'); {debug}
+          if DEBUG=3 then writeln('i_col: ', i_col); {debug}
           if(i_col<>COL) then break; {if size of the field matrix did not match the max row and col break, because
 																				there must be a error}
           Inc(j_row);
@@ -128,24 +122,21 @@ begin
           break; {if the the char is not a zero or one break and print error code}
         end;
 
-      if DEBUG=3 then writeln('     -set cell: iCOL-', i_col, ' jROW-', j_row); {debug}
+      if DEBUG=3 then writeln('   set cell', i_col, ' ', j_row); {debug}
       gameField[j_row, i_col] := cIN;
       Inc(i_col); {increment col counter after every inserted char}
 
-      if i_col > 100 then break;
 //      if DEBUG=3 then readkey;  {debug}
     end;
 //    writeln(length(gameField));
 //    writeln(length(gameField[0]))
 
-  if DEBUG=3 then writeln('   jROW: ', j_row, ' iCOL: ', i_col); {debug}
+  if DEBUG=3 then writeln('   i: ', i_col, 'j: ', j_row); {debug}
 
   if(not eof(tfIN)) then
     writeln('Fehler beim einlesen der datei "', selectedTemplate, '" bitte pruefen sie die Datei.');
 
   close(tfIN);
-
-  nextGen:=gameField;
 end;
 
 { ============================
@@ -157,10 +148,9 @@ var
   i: integer=0;
   j: integer=0;
 begin
-  clrscr;
   for i:=0 to ROW-1 do begin
     for j:=0 to COL-1 do begin
-      if gameField[i, j]=#48 then write(' ')
+      if gameField[i, j]=#48 then write()
       else
         write('#');
     end;
@@ -177,34 +167,29 @@ var
   loop: boolean=true;
 begin
   if DEBUG>=2 then writeln(' calc next gen'); {debug}
+  while(loop) do begin
+    while(loop or (i_col<COL-1)) do begin
+      if (gameField[j_row-1, i_col-1]=#49)   then inc(living_cells);
+      if (gameField[j_row-1, i_col]=#49)     then inc(living_cells);
+      if (gameField[j_row-1, i_col+1]=#49)   then inc(living_cells);
+      if (gameField[j_row, i_col-1]=#49)     then inc(living_cells);
+      if (gameField[j_row, i_col+1]=#49)     then inc(living_cells);
+      if (gameField[j_row+1, i_col-1]=#49)   then inc(living_cells);
+      if (gameField[j_row+1, i_col]=#49)     then inc(living_cells);
+      if (gameField[j_row+1, i_col+1]=#49)   then inc(living_cells);
 
-  while(j_row<ROW) do begin
-    living_cells:=0;
-    while((i_col<COL-1)) do begin
-      living_cells:=0;
-      if (nextGen[j_row-1, i_col-1]=#49)   then inc(living_cells);
-      if (nextGen[j_row-1, i_col]=#49)     then inc(living_cells);
-      if (nextGen[j_row-1, i_col+1]=#49)   then inc(living_cells);
-      if (nextGen[j_row, i_col-1]=#49)     then inc(living_cells);
-      if (nextGen[j_row, i_col+1]=#49)     then inc(living_cells);
-      if (nextGen[j_row+1, i_col-1]=#49)   then inc(living_cells);
-      if (nextGen[j_row+1, i_col]=#49)     then inc(living_cells);
-      if (nextGen[j_row+1, i_col+1]=#49)   then inc(living_cells);
-
-      if (nextGen[j_row, i_col]=#49) then begin
-        if(living_cells<2) then gameField[j_row, i_col] := #48
-        else if(living_cells=2)or(living_cells=3) then gameField[j_row, i_col] := #49
-        else if(living_cells>=4) then gameField[j_row, i_col] := #48;
+      if (gameField[j_row, i_col]=#49) then begin
+        if(living_cells<=2)or(living_cells>3) then gameField[j_row, i_col] := #48;
+        if(living_cells=2)or(living_cells=3) then gameField[j_row, i_col] := #49;
       end
-      else if(living_cells=3) then gameField[j_row, i_col] := #49;
+      else
+        if(living_cells=3) then gameField[j_row, i_col] := #49;
+
       inc(i_col);
     end;
 
-    if DEBUG>=2 then writeln(j_row); {debug}
     inc(j_row);
-    i_col:=1;
   end;
-  nextGen:=gameField;
 end;
 
 
@@ -215,9 +200,8 @@ begin
   if DEBUG>=2 then writeln('   field is set...'); {debug}
 
   repeat
-    update_screen;
-    delay(100);
     next_gen;
+    update_screen;
   until keypressed;
 end;
 
@@ -231,7 +215,6 @@ begin
   clrscr;
   writeln('=============WELCOME==============');
   repeat
-    writeln(#10, selectedTemplate, #10);
     writeln('(1) Spiel Starten');
     writeln('(2) Vorlage laden');
     writeln('(0) Exit');
