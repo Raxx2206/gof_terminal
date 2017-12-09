@@ -1,13 +1,9 @@
 program gof_terminal;
+uses Classes, sysutils, crt;
 
-{ ===========================
-			H E A D E R
-	=========================== }
-uses
-	{$IFDEF UNIX}{$IFDEF UseCThreads}
-	cthreads,
-	{$ENDIF}{$ENDIF}
-	Classes, sysutils, crt;
+//	{$IFDEF UNIX}{$IFDEF UseCThreads}
+//	cthreads,
+//	{$ENDIF}{$ENDIF}
 
 type
 	stringArray=array[1..256] of string; {new type to return and recieve arrays}
@@ -50,7 +46,7 @@ begin
 					end;
 			until findNext(info)<>0;
 		end;
-findClose(info);
+	findClose(info);
 	size := count; // how many templates actually found
 	get_templates := templateName;
 end;
@@ -97,7 +93,7 @@ procedure set_field;
 var
 	tfIN: textFile;
 	cIN: char;
-	{row and column counter}
+		{row and column counter}
 	i_col: integer=0;
 	j_row: integer=0;
 begin
@@ -107,8 +103,9 @@ begin
 	while not eof(tfIN) do
 		begin
 			{all cells on the oursides or dead and still be dead regardless of the file}
-			if ((i_col=0) or (i_col=COL-1) or (j_row=0) or (j_row=ROW-1)) then cIN:=#48
-			else read(tfIN, cIN);
+			if ((i_col=0)or(i_col=COL-1)or(j_row=0)or(j_row=ROW-1)) then cIN := #48
+			else
+				read(tfIN, cIN);
 
 			if DEBUG=3 then writeln('   char readed: ', cIN); {debug}
 			{if hit a new line reset row counter and increment col counter by one}
@@ -147,20 +144,54 @@ begin
 end;
 
 { ============================
-G A M E  L O G I C
+		G A M E  L O G I C
 ============================ }
 
 procedure update_screen;
 var
-i: integer=0;
-j: integer=0;
+	i: integer=0;
+	j: integer=0;
 begin
 	for i:=0 to ROW-1 do begin
 		for j:=0 to COL-1 do begin
-			if gameField[i,j]=#48 then write()
-			else write('#');
+			if gameField[i, j]=#48 then write()
+			else
+				write('#');
 		end;
 		writeln();
+	end;
+end;
+
+
+procedure next_gen;
+var
+	i_col: integer=1;
+	j_row: integer=1;
+	living_cells: integer=0;
+	loop: boolean=true;
+begin
+	while(loop) do begin
+		while(loopor(i_col<COL-1)) do begin
+			if (gameField[j_row-1, i_col-1]=#49)   then inc(living_cells);
+			if (gameField[j_row-1, i_col]=#49)     then inc(living_cells);
+			if (gameField[j_row-1, i_col+1]=#49)   then inc(living_cells);
+			if (gameField[j_row, i_col-1]=#49)     then inc(living_cells);
+			if (gameField[j_row, i_col+1]=#49)     then inc(living_cells);
+			if (gameField[j_row+1, i_col-1]=#49)   then inc(living_cells);
+			if (gameField[j_row+1, i_col]=#49)     then inc(living_cells);
+			if (gameField[j_row+1, i_col+1]=#49)   then inc(living_cells);
+
+			if (gameField[j_row, i_col]=#49) then begin
+				if(living_cells<=2)or(living_cells>3) then gameField[j_row, i_col] := #48;
+				if(living_cells=2)or(living_cells=3) then gameField[j_row, i_col] := #49;
+			end
+			else
+				if(living_cells=3) then gameField[j_row, i_col] := #49;
+
+			inc(i_col);
+		end;
+
+		inc(j_row);
 	end;
 end;
 
@@ -168,9 +199,11 @@ end;
 procedure start_game;
 begin
 	set_field;
-
+	repeat
+		next_gen;
+		update_screen;
+	until keypressed;
 end;
-
 
 //{$I proceduren}
 
