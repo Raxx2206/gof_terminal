@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CONFIG>
-  <Compiler Value="/usr/bin/fpc" Date="1511853268"/>
-  <Params Value=" -MObjFPC -Scghi -Cg -O1 -g -gl -l -vewnhibq -Fu/home/dieter/prog/projects/pascal/study/gof_terminal/ -FU/home/dieter/prog/projects/pascal/study/gof_terminal/lib/x86_64-linux/ gof.pas"/>
-</CONFIG>
