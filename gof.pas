@@ -9,9 +9,6 @@ const
   ROW=30;
 
 var
-  input: string;
-  mainLoop: boolean=false;
-
   selectedTemplate: string='default.txt';
   gameField: array[0..ROW-1, 0..COL-1] of char;
   nextGen: array[0..ROW-1, 0..COL-1] of char;
@@ -19,71 +16,7 @@ var
   DEBUG: byte;
 
 { ============================
-				M E N U
-	============================ }
-{returns a string array with all files inside the folder 'template' and set a int parameter to the amount of how many
-files are found}
-function get_templates(var size: integer): stringArray;
-var
-  info: TSearchRec;
-  count: Longint;
-  templateName: stringArray;
-begin
-  count := 0;
-  if findFirst('templates/*', faAnyFile and faDirectory, info)=0 then
-    begin
-      repeat
-        with info do
-          begin
-            if (attr and faDirectory)<>faDirectory then begin
-              Inc(count);
-              templateName[count] := Name;
-            end;
-          end;
-      until findNext(info)<>0;
-    end;
-  findClose(info);
-  size := count; // how many templates actually found
-  get_templates := templateName;
-end;
-
-{list available templates inside the folder templates}
-procedure select_template;
-var
-  templateName: stringArray;
-  input: string;
-  choise: LongInt=0; {converted input}
-  size: integer=0; {how many templates are found}
-
-  i: integer=0;
-  loop: boolean=false;
-begin
-  writeln;
-  templateName := get_templates(size);
-  repeat
-    clrscr;
-    writeln('Waehlen sie eine Vorlage');
-
-    for i:=1 to size do writeln('(', (i), ')', templateName[i]);
-    writeln; writeln('(0)Exit');
-
-    write('~~>');
-    readln(input);
-
-    loop := false;
-    if ((not tryStrToInt(input, choise))or(choise>size)) then
-      begin
-        writeln; writeln('Geben Sie eine Zahl in den Klammern ein (z.B. 1=', templateName[1], ')');
-        loop := true
-      end
-    else selectedTemplate:=templateName[choise];
-  until ((input='0')or(not loop));
-
-
-end;
-
-{ ============================
-I N I T
+          I N I T
 ============================ }
 {reads the file and fill the gane field array like the file}
 procedure set_field;
@@ -151,7 +84,6 @@ end;
 { ============================
 		G A M E  L O G I C
 ============================ }
-
 procedure update_screen;
 var
   i: integer=0;
@@ -168,13 +100,11 @@ begin
   end;
 end;
 
-
 procedure next_gen;
 var
   i_col: integer=1;
   j_row: integer=1;
   living_cells: integer=0;
-  loop: boolean=true;
 begin
   if DEBUG>=2 then writeln(' calc next gen'); {debug}
 
@@ -207,7 +137,6 @@ begin
   nextGen:=gameField;
 end;
 
-
 procedure start_game;
 begin
   if DEBUG>=2 then writeln('   init field...'); {debug}
@@ -216,12 +145,108 @@ begin
 
   repeat
     update_screen;
-    delay(100);
+    delay(200);
     next_gen;
   until keypressed;
 end;
 
-//{$I proceduren}
+{ ============================
+				M E N U
+	============================ }
+{returns a string array with all files inside the folder 'template' and set a int parameter to the amount of how many
+files are found}
+function get_templates(var size: integer): stringArray;
+var
+  info: TSearchRec;
+  count: Longint;
+  templateName: stringArray;
+begin
+  count := 0;
+  if findFirst('templates/*', faAnyFile and faDirectory, info)=0 then
+    begin
+      repeat
+        with info do
+          begin
+            if (attr and faDirectory)<>faDirectory then begin
+              Inc(count);
+              templateName[count] := Name;
+            end;
+          end;
+      until findNext(info)<>0;
+    end;
+  findClose(info);
+  size := count; // how many templates actually found
+  get_templates := templateName;
+end;
+
+{list available templates inside the folder templates}
+procedure select_template_menu;
+var
+  templateName: stringArray;
+  input: string;
+  choise: LongInt=0; {converted input}
+  size: integer=0; {how many templates are found}
+
+  i: integer=0;
+  loop: boolean=false;
+begin
+  writeln;
+  templateName := get_templates(size);
+  repeat
+    clrscr;
+    writeln(#10, 'Vorlage: ', selectedTemplate, #10, '------------------', #10);
+    writeln('Waehlen sie eine Vorlage');
+
+    for i:=1 to size do begin
+      if templateName[i]<>'null.txt' then writeln('(', (i), ')', templateName[i]);
+    end;
+    writeln('(0)Exit');
+
+    write('~~> ');
+    readln(input);
+    if ((not tryStrToInt(input, choise))or(choise>size)) then
+      begin
+        writeln; writeln('Geben Sie eine Zahl in den Klammern ein (z.B. 1=', templateName[1], ')');
+        loop := true
+      end
+    else if choise=0 then loop:=true
+    else selectedTemplate:=templateName[choise];
+  until loop;
+end;
+
+procedure main_menu;
+var
+  main_loop:boolean=false;
+  input_str:string;
+  input_int:longint=0;
+begin
+  repeat
+    if keypressed then readkey;
+    clrscr;
+    writeln(#10, 'Vorlage: ', selectedTemplate, #10, '------------------');
+    writeln('Source Code: www.github.com/Raxx2206/gof_terminal', #10, '------------------', #10);
+    writeln('(1) Spiel Starten');
+    writeln('(2) Vorlage aendern');
+    writeln('(0) Exit');
+
+    if input_int=-1 then writeln(#10, ' Geben Sie eine Zahl in den Klammern ein wie 1 um das Spiel zu starten.', #10);
+
+    write('~~> ');
+    readln(input_str);
+    if not trystrtoint(input_str, input_int) then input_int:=-1
+    else begin
+      case input_int of
+        0: begin
+          writeln('Goodbye!');
+          main_loop:=true;
+        end;
+        1: start_game;
+        2: select_template_menu;
+      end;
+    end;
+
+  until main_loop;
+end;
 
 { ============================
 					M A I N
@@ -230,25 +255,6 @@ begin
   if(paramcount>0) then DEBUG := strtoint(paramstr(1));
   clrscr;
   writeln('=============WELCOME==============');
-  repeat
-    writeln(#10, selectedTemplate, #10);
-    writeln('(1) Spiel Starten');
-    writeln('(2) Vorlage laden');
-    writeln('(0) Exit');
-    write('~~> ');
-    input := readkey; //TODO: change to readln
-    writeln(input);
-    case input of
-      #49: begin
-        mainLoop := true;
-        start_game;
-      end;
-      #50: begin
-        select_template;
-      end;
-      '0': break;
-    else
-      writeln('Geben Sie eine Zahl in den Klammern ein (z.B. 1=Spiel Starten) \n\n');
-    end;
-  until mainLoop;
+
+  main_menu;
 end.
