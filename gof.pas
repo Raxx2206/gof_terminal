@@ -1,5 +1,9 @@
 program gof_terminal;
-uses Classes, sysutils, crt;
+uses
+//  {$IFDEF FPC}
+//    {$MODE OBJFPC}
+//  {$ENDIF}
+  Classes, sysutils, crt;
 
 type
   stringArray=array[1..256] of string; {new type to return and recieve arrays}
@@ -17,57 +21,63 @@ var
           I N I T
 ============================ }
 {reads the file and fill the gane field array like the file}
-procedure set_field;
+procedure set_field(var is_error:boolean);
 var
   tfIN: textFile;
   cIN: char;
     {row and column counter}
   i_col: integer=0;
   j_row: integer=0;
+
 begin
   assign(tfIN, ('templates/'+selectedTemplate));
-//  try //TODO handle error
-  reset(tfIN);
-  while not eof(tfIN) do
+  {$I+}
+  try
+    reset(tfIN);
+    while not eof(tfIN) do
+      begin
+        read(tfIN, cIN);
+//        if(((cIN=#48)or(cIN=#10))and((i_col=0)or(i_col=COL-1)or(j_row=0)or(j_row=ROW-1))) then
+//          begin
+//            cIN := #50;
+//          end;
+        {all cells on the ourside or dead and still be dead regardless of the file}
+        if ((i_col=0)or(i_col=COL-1)) then cIN:=#50;
+
+        {if hit a new line reset row counter and increment col counter by one}
+        if(cIN=#10) then  {#10 == new line | for windows #13#10}
+          begin
+            if(i_col<>COL) then break; {if size of the field matrix did not match the max row and col break, because
+                                          there must be a error}
+
+            Inc(j_row);
+            i_col := 0;
+            continue;
+          end;
+
+        if((cIN<>#48)and(cIN<>#49)and(cIN<>#10)and(cIN<>#50)) then
+          begin
+            break; {if the the char is not a zero or one break and print error code}
+          end;
+
+        {all cells on the ourside or dead and still be dead regardless of the file}
+        if ((j_row=0)or(j_row=ROW-1)) then cIN:=#50;
+        gameField[j_row, i_col] := cIN;
+        Inc(i_col); {increment col counter after every inserted char}
+      end;
+    nextGen := gameField;
+  except
+    on E: EInOutError do is_error := true;
+  end;
+  if(not eof(tfIN)or(is_error)) then
     begin
-
-      {all cells on the ourside or dead and still be dead regardless of the file}
-      read(tfIN, cIN);
-      if(((cIN<>#48)and(cIN<>#10)) and ((i_col=0)or(i_col=COL-1)or(j_row=0)or(j_row=ROW-1))) then
-        begin
-          cIN:=#48;
-        end;
-
-      {if hit a new line reset row counter and increment col counter by one}
-      if(cIN=#10) then  {#10 == new line | for windows #13#10}
-        begin
-          if(i_col<>COL) then break; {if size of the field matrix did not match the max row and col break, because
-																				there must be a error}
-          Inc(j_row);
-          i_col := 0;
-          continue;
-        end;
-
-      if((cIN<>#48)and(cIN<>#49)and(cIN<>#10)) then
-        begin
-          break; {if the the char is not a zero or one break and print error code}
-        end;
-
-      gameField[j_row, i_col] := cIN;
-      Inc(i_col); {increment col counter after every inserted char}
-
-      if i_col > 100 then break;
+      write('Fehler beim einlesen der datei "', selectedTemplate, '", bitte pruefen sie die Datei.');
+      readkey;
+      close(tfIN);
+      is_error:=true;
     end;
-//    writeln(length(gameField));
-//    writeln(length(gameField[0]))
-
-
-  if(not eof(tfIN)) then
-    writeln('Fehler beim einlesen der datei "', selectedTemplate, '" bitte pruefen sie die Datei.');
-
-  close(tfIN);
-
-  nextGen:=gameField;
+//  if is_error then set_field:=false
+//  else set_field:=true;
 end;
 
 { ============================
@@ -82,11 +92,13 @@ begin
   for i:=0 to ROW-1 do begin
     for j:=0 to COL-1 do begin
       if gameField[i, j]=#48 then write(' ')
+        else if gameField[i,j]=#50 then write('%')
       else
         write('#');
     end;
     writeln();
   end;
+  write('Zum beenden beliebige Tase druecken...');
 end;
 
 procedure next_gen;
@@ -96,10 +108,10 @@ var
   living_cells: integer=0;
 begin
 
-  while(j_row<ROW) do begin
-    living_cells:=0;
+  while(j_row<ROW-1) do begin
+    living_cells := 0;
     while((i_col<COL-1)) do begin
-      living_cells:=0;
+      living_cells := 0;
       if (nextGen[j_row-1, i_col-1]=#49)   then inc(living_cells);
       if (nextGen[j_row-1, i_col]=#49)     then inc(living_cells);
       if (nextGen[j_row-1, i_col+1]=#49)   then inc(living_cells);
@@ -119,20 +131,23 @@ begin
     end;
 
     inc(j_row);
-    i_col:=1;
+    i_col := 1;
   end;
-  nextGen:=gameField;
+  nextGen := gameField;
 end;
 
 procedure start_game;
+var is_error:boolean=false;
 begin
-  set_field;
-
-  repeat
-    update_screen;
-    delay(200);
-    next_gen;
-  until keypressed;
+  set_field(is_error);
+  if not is_error then
+    begin
+      repeat
+        update_screen;
+        delay(200);
+        next_gen;
+      until keypressed;
+    end
 end;
 
 { ============================
@@ -147,14 +162,17 @@ var
   templateName: stringArray;
 begin
   count := 0;
-  if findFirst('templates/*', faAnyFile and faDirectory, info)=0 then
+  if findFirst('templates/*', (faAnyFile)and(faDirectory), info)=0 then
     begin
       repeat
         with info do
           begin
-            if (attr and faDirectory)<>faDirectory then begin
-              Inc(count);
-              templateName[count] := Name;
+            if ((attr)and(faDirectory))<>faDirectory then begin
+              if Name<>'null.txt' then
+              begin
+                Inc(count);
+                templateName[count] := Name;
+              end;
             end;
           end;
       until findNext(info)<>0;
@@ -191,22 +209,24 @@ begin
     readln(input);
     if ((not tryStrToInt(input, choise))or(choise>size)) then
       begin
-        writeln; writeln('Geben Sie eine Zahl in den Klammern ein (z.B. 1=', templateName[1], ')');
-        loop := true
+        write('Geben Sie eine Zahl in den Klammern ein (z.B. 1=', templateName[1], ')');
+        readkey;
       end
-    else if choise=0 then loop:=true
-    else selectedTemplate:=templateName[choise];
+    else
+      if choise=0 then loop := true
+      else
+        selectedTemplate := templateName[choise];
   until loop;
 end;
 
 procedure main_menu;
 var
-  main_loop:boolean=false;
-  input_str:string;
-  input_int:longint=0;
+  main_loop: boolean=false;
+  input_str: string;
+  input_int: longint=0;
 begin
   repeat
-    if keypressed then readkey;
+    if keypressed then readkey; {remove key from buffer}
     clrscr;
     writeln(#10, 'Vorlage: ', selectedTemplate, #10, '------------------');
     writeln('Source Code: www.github.com/Raxx2206/gof_terminal', #10, '------------------', #10);
@@ -218,17 +238,20 @@ begin
 
     write('~~> ');
     readln(input_str);
-    if not trystrtoint(input_str, input_int) then input_int:=-1
-    else begin
-      case input_int of
-        0: begin
-          writeln('Goodbye!');
-          main_loop:=true;
+    if not trystrtoint(input_str, input_int) then input_int := -1 {input_int=-1 indicate an error}
+    else
+      begin
+        case input_int of
+          0: begin
+            writeln('Goodbye!');
+            main_loop := true;
+          end;
+          1: start_game;
+          2: select_template_menu;
+        else
+          input_int := -1;
         end;
-        1: start_game;
-        2: select_template_menu;
       end;
-    end;
 
   until main_loop;
 end;
