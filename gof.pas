@@ -1,8 +1,5 @@
 program gof_terminal;
 uses
-//  {$IFDEF FPC}
-//    {$MODE OBJFPC}
-//  {$ENDIF}
   Classes, sysutils, crt;
 
 type
@@ -37,10 +34,6 @@ begin
     while not eof(tfIN) do
       begin
         read(tfIN, cIN);
-//        if(((cIN=#48)or(cIN=#10))and((i_col=0)or(i_col=COL-1)or(j_row=0)or(j_row=ROW-1))) then
-//          begin
-//            cIN := #50;
-//          end;
         {all cells on the ourside or dead and still be dead regardless of the file}
         if ((i_col=0)or(i_col=COL-1)) then cIN:=#50;
 
@@ -76,8 +69,6 @@ begin
       close(tfIN);
       is_error:=true;
     end;
-//  if is_error then set_field:=false
-//  else set_field:=true;
 end;
 
 { ============================
