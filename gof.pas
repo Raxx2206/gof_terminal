@@ -13,8 +13,6 @@ var
   gameField: array[0..ROW-1, 0..COL-1] of char;
   nextGen: array[0..ROW-1, 0..COL-1] of char;
 
-  DEBUG: byte;
-
 { ============================
           I N I T
 ============================ }
@@ -32,22 +30,17 @@ begin
   reset(tfIN);
   while not eof(tfIN) do
     begin
-      if DEBUG>=4 then readkey; {debug}
 
       {all cells on the ourside or dead and still be dead regardless of the file}
       read(tfIN, cIN);
       if(((cIN<>#48)and(cIN<>#10)) and ((i_col=0)or(i_col=COL-1)or(j_row=0)or(j_row=ROW-1))) then
         begin
-          if DEBUG>=2 then writeln('  cell is border'); {debug}
           cIN:=#48;
         end;
 
-      if DEBUG=3 then writeln('   char readed: ', cIN); {debug}
       {if hit a new line reset row counter and increment col counter by one}
       if(cIN=#10) then  {#10 == new line | for windows #13#10}
         begin
-          if DEBUG>=2 then writeln('   char is new line'); {debug}
-          if DEBUG>=2 then writeln('      -i_col: ', i_col); {debug}
           if(i_col<>COL) then break; {if size of the field matrix did not match the max row and col break, because
 																				there must be a error}
           Inc(j_row);
@@ -57,21 +50,17 @@ begin
 
       if((cIN<>#48)and(cIN<>#49)and(cIN<>#10)) then
         begin
-          if DEBUG=3 then writeln('   is no valid char!'); {debug}
           break; {if the the char is not a zero or one break and print error code}
         end;
 
-      if DEBUG=3 then writeln('     -set cell: iCOL-', i_col, ' jROW-', j_row); {debug}
       gameField[j_row, i_col] := cIN;
       Inc(i_col); {increment col counter after every inserted char}
 
       if i_col > 100 then break;
-//      if DEBUG=3 then readkey;  {debug}
     end;
 //    writeln(length(gameField));
 //    writeln(length(gameField[0]))
 
-  if DEBUG=3 then writeln('   jROW: ', j_row, ' iCOL: ', i_col); {debug}
 
   if(not eof(tfIN)) then
     writeln('Fehler beim einlesen der datei "', selectedTemplate, '" bitte pruefen sie die Datei.');
@@ -106,7 +95,6 @@ var
   j_row: integer=1;
   living_cells: integer=0;
 begin
-  if DEBUG>=2 then writeln(' calc next gen'); {debug}
 
   while(j_row<ROW) do begin
     living_cells:=0;
@@ -130,7 +118,6 @@ begin
       inc(i_col);
     end;
 
-    if DEBUG>=2 then writeln(j_row); {debug}
     inc(j_row);
     i_col:=1;
   end;
@@ -139,9 +126,7 @@ end;
 
 procedure start_game;
 begin
-  if DEBUG>=2 then writeln('   init field...'); {debug}
   set_field;
-  if DEBUG>=2 then writeln('   field is set...'); {debug}
 
   repeat
     update_screen;
@@ -252,7 +237,6 @@ end;
 					M A I N
 	============================ }
 begin
-  if(paramcount>0) then DEBUG := strtoint(paramstr(1));
   clrscr;
   writeln('=============WELCOME==============');
 
