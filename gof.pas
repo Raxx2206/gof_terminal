@@ -72,7 +72,7 @@ begin
 end;
 
 { ============================
-		G A M E  L O G I C
+    G A M E  L O G I C
 ============================ }
 procedure update_screen;
 var
@@ -142,8 +142,8 @@ begin
 end;
 
 { ============================
-				M E N U
-	============================ }
+	M E N U
+============================ }
 {returns a string array with all files inside the folder 'template' and set a int parameter to the amount of how many
 files are found}
 function get_templates(var size: integer): stringArray;
@@ -153,7 +153,7 @@ var
   templateName: stringArray;
 begin
   count := 0;
-  if findFirst('templates/*', (faAnyFile)and(faDirectory), info)=0 then
+  if findFirst('templates/*', (faAnyFile), info)=0 then
     begin
       repeat
         with info do
@@ -198,7 +198,7 @@ begin
 
     write('~~> ');
     readln(input);
-    if ((not tryStrToInt(input, choise))or(choise>size)) then
+    if ((not tryStrToInt(input, choise))or(choise>size)or(choise<0)) then
       begin
         write('Geben Sie eine Zahl in den Klammern ein (z.B. 1=', templateName[1], ')');
         readkey;
@@ -248,11 +248,13 @@ begin
 end;
 
 { ============================
-					M A I N
-	============================ }
+	M A I N
+============================ }
 begin
   clrscr;
   writeln('=============WELCOME==============');
 
   main_menu;
 end.
+
+// how to compile: fpc -Mobjfpc gof.pas
