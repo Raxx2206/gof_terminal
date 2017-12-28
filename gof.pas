@@ -257,4 +257,4 @@ begin
   main_menu;
 end.
 
-// how to compile: fpc -Mobjfpc gof.pas
+{how to compile: fpc -Mobjfpc gof.pas}
