@@ -1,1 +1,1 @@
-gof_terminal
+Game Of Life
